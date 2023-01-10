@@ -44,7 +44,9 @@ $routes->group('', ['filter' => 'authFilter'], function($routes) {
     $routes->get('/user/ticket','TiketUser::index');
     $routes->get('/user/ticket/show','TiketUser::show/$1');
     $routes->get('/user/ticket/edit','TiketUser::edit/$1');
-    $routes->get('/user/ticket/add','Tiketuser::add');
+    $routes->get('/user/ticket/add','TiketUser::add');
+    $routes->get('/contact','Contact::index');
+    $routes->get('/user/ticket/view','TiketUser::view/$1');
 });
 
 

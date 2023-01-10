@@ -10,13 +10,17 @@ use CodeIgniter\Autoloader\Helper;
 
 class Tiket extends BaseController {
 
+    public function __construct()
+    {
+        $this->session = session();
+        $this->db = \Config\Database::connect();
+    }
     public function index() {
-
+        
         // show tiket lists
-        $ticketModel = new Ticket_model();
-        $data['tickets'] = $ticketModel->get();
-        $data['tickets'] = $ticketModel->orderBy('created_at','DESC')->findAll();
 
+        $query = $this->db->query("SELECT t.*, s.name as nama_status FROM tickets t, statuses s WHERE t.status_id=s.id");
+        $data['tickets'] = $query->getResultArray();
         // layout
         echo view("layout/header");
         echo view("layout/navbar");
@@ -31,6 +35,9 @@ class Tiket extends BaseController {
         $data['ticket'] = $ticketModel->where([
             'id' => $id
         ])->first();
+        
+        $query2 = $this->db->query("SELECT * FROM master_pegawai WHERE id_org IN ('92610','92620','92630') AND id_satker='6400' ORDER BY id_org");
+        $data['orang'] = $query2->getResultArray();
 
         // tampilkan 404 error jk data tidak ditemukan 
         if (!$data['ticket']) {
@@ -51,14 +58,12 @@ class Tiket extends BaseController {
         $ticketModel = new Ticket_model();
         $replyModel = new Reply_model();
 
-        $data['ticket'] = $ticketModel->where([
-            'id' => $id
-        ])->first();
-        
-        // $data['reply'] = $replyModel->where([
+        // $data['ticket'] = $ticketModel->where([
         //     'id' => $id
-        // ])->getResult();
-        
+        // ])->first();
+
+        $tiketquery = $db->query("SELECT t.*, s.name as nama_status FROM `tickets` t, statuses s WHERE t.id = '$id' AND t.status_id = s.id ");
+        $data['ticket'] = $tiketquery->getRowArray();
         $query = $db->query("SELECT * FROM tickets_reply WHERE ticket_id = '$id'");
         $data['reply'] = $query->getResultArray();
         $data['solver_name'] = $query->getRow();
@@ -97,10 +102,11 @@ class Tiket extends BaseController {
         $reply_exp = $this->request->getPost('comment');
         $reply_date = date($format);
         $ticket_id = $id;
-
+        $bmn = $this->request->getPost('bmn');
         $datanew = [
             'title' => $title,
             'content' => $content,
+            'no_bmn' => $bmn,
             'status_id' => $status,
             'author_name' => $authorName,
             'author_email' => $authorEmail,
@@ -117,35 +123,40 @@ class Tiket extends BaseController {
 
         $to = $authorEmail;
         $subject = $solver_name . ' telah menambahkan komentar pada tiket dengan judul" ' . $title . ' "';
-        $message = $solver_name . '<p> telah menambahkan komentar. Cek di https://bpskaltim.com/siyanti. Terima kasih</p>' ;
+        $message = $solver_name . ' telah menambahkan komentar. Cek di https://bpskaltim.com/siyanti. Terima kasih</p>' ;
 
         if($ticketModel->update($id, $datanew)) {
-            $replyModel->insert($datakomen);
-            session()->setFlashdata('pesan', 'Tiket berhasil di update');
-            session()->setFlashdata('alert-class','alert-success');
-
-            $email = \Config\Services::email();
-
-            $email->setTo($to);
-            $email->setFrom('csti6400@gmail.com', 'Sistem Pelayanan TI 6400');
-            
-            $email->setSubject($subject);
-            $email->setMessage($message);
-
-            if ($email->send()) 
-            {
-                session()->setFlashData('email_send','Email berhasil dikirimkan');
+            if ($reply_exp == null) {
+                session()->setFlashdata('pesan', 'Tiket berhasil di update');
                 session()->setFlashdata('alert-class','alert-success');
-            } 
-            else 
-            {
-                session()->setFlashData('email_send','Email gagal dikirimkan');
-                session()->setFlashdata('alert-class','alert-danger');
-                $data = $email->printDebugger(['headers']);
-                print_r($data);
+            } else {
+                $replyModel->insert($datakomen);
+                session()->setFlashdata('pesan', 'Tiket berhasil di update');
+                session()->setFlashdata('alert-class','alert-success');
+    
+                $email = \Config\Services::email();
+    
+                $email->setTo($to);
+                $email->setFrom('csti6400@gmail.com', 'Sistem Pelayanan TI 6400');
+                
+                $email->setSubject($subject);
+                $email->setMessage($message);
+    
+                if ($email->send()) 
+                {
+                    session()->setFlashData('email_send','Email berhasil dikirimkan');
+                    session()->setFlashdata('alert-class','alert-success');
+                } 
+                else 
+                {
+                    session()->setFlashData('email_send','Email gagal dikirimkan');
+                    session()->setFlashdata('alert-class','alert-danger');
+                    $data = $email->printDebugger(['headers']);
+                    print_r($data);
+                }
+                session()->setFlashdata('pesan', 'Tiket berhasil di update');
+                session()->setFlashdata('alert-class','alert-success');
             }
-            session()->setFlashdata('pesan', 'Tiket berhasil di update');
-            session()->setFlashdata('alert-class','alert-success');
         } else {
             session()->setFlashdata('pesan', 'Tiket gagal di update');
             session()->setFlashdata('alert-class', 'alert-danger');
@@ -161,11 +172,18 @@ class Tiket extends BaseController {
     }
 
     public function add() { // fungsi untuk menampilkan form add ticket
+        $nama = $this->session->get('nama');
+        $username = $this->session->get('username');
+        $query = $this->db->query("SELECT a.*,p.email as email FROM autentifikasi a, master_pegawai p WHERE username='$username' AND a.niplama=p.niplama");
+        $query2 = $this->db->query("SELECT * FROM master_pegawai WHERE id_org IN ('92610','92620','92630') AND id_satker='6400' ORDER BY id_org");
+        $data['name'] = $nama;
+        $data['auth'] = $query->getRowArray();
+        $data['orang'] = $query2->getResultArray();
         // layout
         echo view("layout/header");
         echo view("layout/navbar");
         echo view("layout/sidebar");
-        echo view("admin/ticket_add");
+        echo view("admin/ticket_add",$data);
         echo view("layout/footer");
     }
     
@@ -187,16 +205,20 @@ class Tiket extends BaseController {
         $solver_name = $this->request->getPost('solver_name'); 
         $reply_exp = $this->request->getPost('comment');
         $reply_date = date($format);
+        $username = session('username');
+        $bmn = $this->request->getPost('bmn');
 
         $datanew = [
             'title' => $title,
             'content' => $content,
+            'no_bmn' => $bmn,
             'status_id' => 1,
             'author_name' => $authorName,
             'author_email' => $authorEmail,
             'created_at' => $created,
             'solver' => $solver_name,
-            'category_id' => $category
+            'category_id' => $category,
+            'username' => $username
         ];
         
         $datakomen = [
@@ -207,7 +229,9 @@ class Tiket extends BaseController {
         
 
         if($ticketModel->insert($datanew)) {
-            $replyModel->insert($datakomen);
+            if($reply_exp != null) {
+                $replyModel->insert($datakomen);
+            }
             session()->setFlashdata('pesan_add_tiket', 'Tiket berhasil ditambahkan');
             session()->setFlashdata('alert-class','alert-success');
         } else {

@@ -19,7 +19,7 @@ class SendMail extends BaseController
         $email = \Config\Services::email();
 
         $email->setTo($to);
-        $email->setFrom('csti6400@gmail.com', 'Sistem Pelayanan TI 6400');
+        $email->setFrom('your.email@gmail.com', 'Sistem Pelayanan TI 6400');
         
         $email->setSubject($subject);
         $email->setMessage($message);

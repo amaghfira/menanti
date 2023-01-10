@@ -9,18 +9,22 @@ use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\Autoloader\Helper;
 
 class TiketUser extends User {
-
+    public function __construct()
+    {
+        $this->session = session();
+        $this->db = \Config\Database::connect();
+    }
     public function index() {
         // get session data 
         $username = $_SESSION['username'];
         $role = $_SESSION['role'];
         $name = $_SESSION['nama'];
 
+
         // show tiket lists
-        $ticketModel = new Ticket_model();
-        $data['tickets'] = $ticketModel->get();
-        $data['tickets'] = $ticketModel->where('username',$username);
-        $data['tickets'] = $ticketModel->orderBy('created_at','DESC')->findAll();
+
+        $query = $this->db->query("SELECT t.*, s.name as nama_status FROM tickets t, statuses s WHERE t.status_id=s.id AND t.username = '$username'");
+        $data['tickets'] = $query->getResultArray();
 
         // layout
         echo view("layout/header");
@@ -56,14 +60,12 @@ class TiketUser extends User {
         $ticketModel = new Ticket_model();
         $replyModel = new Reply_model();
 
-        $data['ticket'] = $ticketModel->where([
-            'id' => $id
-        ])->first();
-        
-        // $data['reply'] = $replyModel->where([
+        // $data['ticket'] = $ticketModel->where([
         //     'id' => $id
-        // ])->getResult();
-        
+        // ])->first();
+
+        $tiketquery = $db->query("SELECT t.*, s.name as nama_status FROM `tickets` t, statuses s WHERE t.id = '$id' AND t.status_id = s.id ");
+        $data['ticket'] = $tiketquery->getRowArray();
         $query = $db->query("SELECT * FROM tickets_reply WHERE ticket_id = '$id'");
         $data['reply'] = $query->getResultArray();
         $data['solver_name'] = $query->getRow();
@@ -102,10 +104,12 @@ class TiketUser extends User {
         $reply_exp = $this->request->getPost('comment');
         $reply_date = date($format);
         $ticket_id = $id;
+        $bmn = $this->request->getPost('bmn');
         
         $datanew = [
             'title' => $title,
             'content' => $content,
+            'no_bmn' => $bmn,
             'status_id' => $status,
             'author_name' => $authorName,
             'author_email' => $authorEmail,
@@ -121,34 +125,42 @@ class TiketUser extends User {
         ];
 
         
-        $to = ['aulia.maghfira15@gmail.com','aulia.maghfira@bps.go.id','maghfira1197@gmail.com'];
+        $to = [];
+        // $to = ['aulia.maghfira15@gmail.com'];
         $subject = $authorName . ' telah menambahkan komentar';
         $message = $authorName . '<p> telah menambahkan komentar. Cek di https://bpskaltim.com/siyanti.</p>' ;
 
         if($ticketModel->update($id, $datanew)) {
-            $replyModel->insert($datakomen);
-            session()->setFlashdata('pesan', 'Tiket berhasil di update');
-            session()->setFlashdata('alert-class','alert-success');
-
-            $email = \Config\Services::email();
-
-            $email->setTo($to);
-            $email->setFrom('csti6400@gmail.com', 'Sistem Pelayanan TI 6400');
-            
-            $email->setSubject($subject);
-            $email->setMessage($message);
-
-            if ($email->send()) 
-            {
-                session()->setFlashData('email_send','Email berhasil dikirimkan');
+            if ($reply_exp == null) {
+                session()->setFlashdata('pesan', 'Tiket berhasil di update');
                 session()->setFlashdata('alert-class','alert-success');
-            } 
-            else 
-            {
-                session()->setFlashData('email_send','Email gagal dikirimkan');
-                session()->setFlashdata('alert-class','alert-danger');
-                $data = $email->printDebugger(['headers']);
-                print_r($data);
+            } else {
+                $replyModel->insert($datakomen);
+                session()->setFlashdata('pesan', 'Tiket berhasil di update');
+                session()->setFlashdata('alert-class','alert-success');
+    
+                $email = \Config\Services::email();
+    
+                $email->setTo($to);
+                $email->setFrom('csti6400@gmail.com', 'Sistem Pelayanan TI 6400');
+                
+                $email->setSubject($subject);
+                $email->setMessage($message);
+    
+                if ($email->send()) 
+                {
+                    session()->setFlashData('email_send','Email berhasil dikirimkan');
+                    session()->setFlashdata('alert-class','alert-success');
+                } 
+                else 
+                {
+                    session()->setFlashData('email_send','Email gagal dikirimkan');
+                    session()->setFlashdata('alert-class','alert-danger');
+                    $data = $email->printDebugger(['headers']);
+                    print_r($data);
+                }
+                session()->setFlashdata('pesan', 'Tiket berhasil di update');
+                session()->setFlashdata('alert-class','alert-success');
             }
         } else {
             session()->setFlashdata('pesan', 'Tiket gagal di update');
@@ -165,11 +177,16 @@ class TiketUser extends User {
     }
 
     public function add() { // fungsi untuk menampilkan form add ticket
+        $nama = $this->session->get('nama');
+        $username = $this->session->get('username');
+        $query = $this->db->query("SELECT a.*,p.email as email FROM autentifikasi a, master_pegawai p WHERE username='$username' AND a.niplama=p.niplama");
+        $data['nama'] = $nama;
+        $data['auth'] = $query->getRowArray();
         // layout
         echo view("layout/header");
         echo view("layout/navbar");
         echo view("layout/sidebar");
-        echo view("user/ticket_add");
+        echo view("user/ticket_add", $data);
         echo view("layout/footer");
     }
     
@@ -217,11 +234,13 @@ class TiketUser extends User {
         $created = date($format);
         // $created = $created->toDateTimeString();
         $username = session('username');
+        $bmn = $this->request->getPost('bmn');
         
         $datanew = [
             'title' => $title,
             'content' => $content,
             'status_id' => 1,
+            'no_bmn' =>$bmn,
             'author_name' => $authorName,
             'author_email' => $authorEmail,
             'created_at' => $created,
@@ -243,18 +262,19 @@ class TiketUser extends User {
             session()->setFlashdata('alert-class','alert-success');
 
             // kirim email on submit
-            $to = ['aulia.maghfira15@gmail.com','aulia.maghfira@bps.go.id','maghfira1197@gmail.com'];
+            $to = [];
+            // $to = [];
             $subject = 'Permintaan Tiket Baru';
             $message = '
             <p>Hai, Kamu mendapatkan 1 tiket baru.</p>' . 
-            '<p>Pemohon: </p>' . $authorName . 
+            '<p>Pemohon: ' . $authorName . '</p>' .
             '<p>Permasalahan: </p>' . $title . 
             '<p>Selengkapnya kunjungi <a>' . base_url() . '</p>';
 
             $email = \Config\Services::email();
 
             $email->setTo($to);
-            $email->setFrom('csti6400@gmail.com', 'Sistem Pelayanan TI 6400');
+            $email->setFrom('your.email@gmail.com', 'Sistem Pelayanan TI 6400');
             
             $email->setSubject($subject);
             $email->setMessage($message);

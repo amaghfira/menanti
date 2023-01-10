@@ -1,4 +1,4 @@
-<form method="post" action="<?= base_url('tiketuser/edit/' . $ticket['id']); ?>">
+<form method="post" action="<?= base_url('TiketUser/edit/' . $ticket['id']); ?>">
   <div class="form-group">
     <label for="title">Judul</label>
     <input type="text" class="form-control" id="title" name="title" value="<?= $ticket['title']; ?>">
@@ -6,6 +6,10 @@
   <div class="form-group">
     <label for="content">Deskripsi</label>
     <textarea class="form-control" id="content" name="content" rows="3" value="<?= $ticket['content']; ?>"><?= $ticket['content']; ?></textarea>
+  </div>
+  <div class="form-group">
+    <label for="bmn">Nomor BMN</label>
+    <input type="text" class="form-control" id="bmn" name="bmn" value="<?= $ticket['no_bmn']; ?>">
   </div>
   <div class="form-group">
     <label for="created">Waktu Tiket Dibuat</label>

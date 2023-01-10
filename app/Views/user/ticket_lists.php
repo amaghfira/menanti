@@ -42,8 +42,8 @@ if(session()->has('pesan_add_tiket')){
         <td><?php echo $ticket['author_email']; ?></td>
         <td><?php echo $ticket['created_at']; ?></td>
         <td><?php echo $ticket['updated_at']; ?></td>
-        <td><?php echo $ticket['status_id']; ?></td>
-        <td style="text-align: center;"><a href="<?= base_url('tiketuser/view/' . $ticket['id']); ?>" class="btn btn-info btn-sm btn-view">View</a> <a href="<?= base_url('tiketuser/show/' . $ticket['id']); ?>" class="btn btn-success btn-sm btn-edit">Edit</a> <a href="<?= base_url('tiketuser/delete/' . $ticket['id']); ?>" class="btn btn-danger btn-sm btn-delete" data-id="">Hapus</a></td>
+        <td><?php echo $ticket['nama_status']; ?></td>
+        <td style="text-align: center;"><a href="<?= base_url('TiketUser/view/' . $ticket['id']); ?>" class="btn btn-info btn-sm btn-view">View</a> <a href="<?= base_url('TiketUser/show/' . $ticket['id']); ?>" class="btn btn-success btn-sm btn-edit">Edit</a> <a href="<?= base_url('TiketUser/delete/' . $ticket['id']); ?>" class="btn btn-danger btn-sm btn-delete" data-id="">Hapus</a></td>
     </tr>
     <?php endforeach; ?>
     <?php endif; ?>

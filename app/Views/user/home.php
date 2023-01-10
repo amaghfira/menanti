@@ -17,9 +17,9 @@
                 <p>Total Tiket</p>
               </div>
               <div class="icon">
-                <i class="ion ion-bag"></i>
+                <i class="ion ion-chatbox-working"></i>
               </div>
-              <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+              <a href="#" class="small-box-footer"></a>
             </div>
           </div>
           <!-- ./col -->
@@ -32,9 +32,9 @@
                 <p>Tiket Baru</p>
               </div>
               <div class="icon">
-                <i class="ion ion-stats-bars"></i>
+                <i class="ion ion-pricetags"></i>
               </div>
-              <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+              <a href="#" class="small-box-footer"></a>
             </div>
           </div>
           <!-- ./col -->
@@ -47,9 +47,9 @@
                 <p>Tiket Pending</p>
               </div>
               <div class="icon">
-                <i class="ion ion-person-add"></i>
+                <i class="ion ion-load-a"></i>
               </div>
-              <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+              <a href="#" class="small-box-footer"></a>
             </div>
           </div>
           <!-- ./col -->
@@ -62,9 +62,9 @@
                 <p>Tiket Selesai</p>
               </div>
               <div class="icon">
-                <i class="ion ion-pie-graph"></i>
+                <i class="ion ion-thumbsup"></i>
               </div>
-              <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+              <a href="#" class="small-box-footer"></a>
             </div>
           </div>
           <!-- ./col -->

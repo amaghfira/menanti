@@ -1,3 +1,7 @@
+
+<div class="row">
+<h5>Daftar Tiket</h5>
+</div>
 <?php 
 // Display Response
 if(session()->has('pesan')){
@@ -42,7 +46,7 @@ if(session()->has('pesan_add_tiket')){
         <td><?php echo $ticket['author_email']; ?></td>
         <td><?php echo $ticket['created_at']; ?></td>
         <td><?php echo $ticket['updated_at']; ?></td>
-        <td><?php echo $ticket['status_id']; ?></td>
+        <td><?php echo $ticket['nama_status']; ?></td>
         <td style="text-align: center;"><a href="<?= base_url('tiket/view/' . $ticket['id']); ?>" class="btn btn-info btn-sm btn-view">View</a> <a href="<?= base_url('tiket/show/' . $ticket['id']); ?>" class="btn btn-success btn-sm btn-edit">Edit</a> <a href="<?= base_url('tiket/delete/' . $ticket['id']); ?>" class="btn btn-danger btn-sm btn-delete" data-id="">Hapus</a></td>
     </tr>
     <?php endforeach; ?>
